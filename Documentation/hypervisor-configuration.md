@@ -83,3 +83,8 @@ General configuration parameters
 ##### AMD ARM-Opteron A1100
 
     #define CONFIG_MACH_AMD_SEATTLE 1
+
+##### TI K3
+
+    #define CONFIG_TI_16550_MDR_QUIRK	1
+    #define CONFIG_MACH_K3		1
