@@ -49,6 +49,7 @@
 #define  UART_LCR_DLAB		0x80
 #define UART_LSR		0x14
 #define  UART_LSR_THRE		0x20
+#define  UART_MDR1		0x20
 
 static void uart_init(struct uart_chip *chip)
 {
@@ -62,6 +63,9 @@ static void uart_init(struct uart_chip *chip)
 		mmio_write32(chip->base + UART_DLL, chip->divider);
 		mmio_write32(chip->base + UART_DLM, 0);
 		mmio_write32(chip->base + UART_LCR, UART_LCR_8N1);
+#ifdef CONFIG_TI_16550_MDR_QUIRK
+		mmio_write32(chip->base + UART_MDR1, 0);
+#endif
 	}
 }
 
