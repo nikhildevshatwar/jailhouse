@@ -94,6 +94,16 @@
 #define GICD_V3_BASE	((void *)0x08000000)
 #define GICR_V3_BASE	((void *)0x08100000)	/* CPU 3 */
 
+#elif defined(CONFIG_MACH_K3)
+#define CON_TYPE	"8250"
+#define CON_BASE	0x02810000
+#define CON_CLOCK_REG	0
+#define CON_DIVIDER	0x36
+
+#define GIC_VERSION	3
+#define GICD_V3_BASE	((void *)0x01800000)
+#define GICR_V3_BASE	((void *)0x018a0000)	/* CPU 1*/
+
 #endif
 
 #ifndef TIMER_IRQ
