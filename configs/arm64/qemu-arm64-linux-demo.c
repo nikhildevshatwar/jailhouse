@@ -21,7 +21,7 @@
 struct {
 	struct jailhouse_cell_desc cell;
 	__u64 cpus[1];
-	struct jailhouse_memory mem_regions[4];
+	struct jailhouse_memory mem_regions[5];
 	struct jailhouse_irqchip irqchips[1];
 	struct jailhouse_pci_device pci_devices[1];
 } __attribute__((packed)) config = {
@@ -29,6 +29,7 @@ struct {
 		.signature = JAILHOUSE_CELL_DESC_SIGNATURE,
 		.revision = JAILHOUSE_CONFIG_REVISION,
 		.name = "qemu-arm64-linux-demo",
+		.id = 1,
 		.flags = JAILHOUSE_CELL_PASSIVE_COMMREG |
 			JAILHOUSE_CELL_DEBUG_CONSOLE,
 
@@ -74,6 +75,13 @@ struct {
 			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
 				JAILHOUSE_MEM_ROOTSHARED,
 		},
+		/* VIRTIO for disk */ {
+			.phys_start = 0x0a003000,
+			.virt_start = 0x0a003000,
+			.size = 0x1000,
+			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
+				JAILHOUSE_MEM_IO | JAILHOUSE_MEM_ROOTSHARED,
+		},
 	},
 
 	.irqchips = {
@@ -82,7 +90,7 @@ struct {
 			.pin_base = 32,
 			.pin_bitmap = {
 				1 << (33 - 32),
-				0,
+				1 << (78 - 64),
 				0,
 				(1 << (140 - 128))
 			},

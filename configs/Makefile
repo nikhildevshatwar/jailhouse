@@ -16,7 +16,7 @@ LINUXINCLUDE := -I$(src)/../hypervisor/arch/$(SRCARCH)/include \
 KBUILD_CFLAGS := -Wextra
 
 ifneq ($(wildcard $(obj)/../include/jailhouse/config.h),)
-KBUILD_CFLAGS += -include $(obj)/../include/jailhouse/config.h
+KBUILD_CFLAGS += -g -include $(obj)/../include/jailhouse/config.h
 endif
 
 OBJCOPYFLAGS := -O binary

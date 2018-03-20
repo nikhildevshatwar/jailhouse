@@ -100,4 +100,12 @@
 		ranges =
 			<0x02000000 0x00 0x10000000 0x0 0x10000000 0x00 0x10000>;
 	};
+
+	virtio_mmio@a003c00 {
+		dma-coherent;
+		interrupts = <GIC_SPI 0x2e IRQ_TYPE_EDGE_RISING>;
+		reg = <0x0 0x0a003c00 0x0 0x200>;
+		compatible = "virtio,mmio";
+	};
+
 };
