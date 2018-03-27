@@ -21,11 +21,18 @@
 
 	.globl	_start
 _start:
+
+	mov		x2, #0x09000000
+	mov		x1, #0x23
+	str		w1, [x2]
+	str		w1, [x2]
+
 	/*
 	 * EL3 initialisation
 	 */
 	mrs	x0, CurrentEL
 	cmp	x0, #CURRENTEL_EL3
+
 	/* Only support non EL3 */
 	b.eq	unsupported
 
@@ -125,7 +132,7 @@ simple_el2_vectors:
 
 
 invalid_exception:
-	mov		x2, #0x02800000
+	mov		x2, #0x09000000
 	mov		x1, #0x21
 	str		w1, [x2]
 	str		w1, [x2]

@@ -1,7 +1,7 @@
 #include <stdarg.h>
 #include <jailhouse/string.h>
 
-#define UART_WRITE_ADDR	0x02800000
+#define UART_WRITE_ADDR	0x09000000
 
 static inline void console_write(const char *buf) {
 	volatile char *uart = (volatile char *)UART_WRITE_ADDR;
@@ -60,9 +60,10 @@ void bootwrapper_entry(unsigned long mpidr, unsigned long cpu_id) {
 	unsigned int state = 1;
 	unsigned int param;
 
-	printk("Core %d is up!\n", cpu_id);
+	printk("Core %d is up\n", cpu_id);
 	enter_hyp(cpu_id);
 
+	printk("Core %d called entrypoint\n", cpu_id);
 	while(1)
 		;
 }
@@ -109,6 +110,8 @@ int bringup_one_core(int cpu_id) {
 	void *entry = entry_wrapper;
 	unsigned long mpidr = ((cpu_id / 2) << 8) + (cpu_id % 2);
 
+	mpidr = cpu_id;
+
 	printk("Bringing up core: 0x%3x\n", mpidr);
 	arm_smccc_smc(PSCI_FN64_CPU_ON, mpidr, (unsigned long)entry, 0,
 		0, 0, 0, 0, NULL, NULL);
@@ -140,7 +143,6 @@ void load_hypervisor(int cpu_count) {
 	memcpy(cfg, vmconfig0, 0x2a4);
 	/* HACK, TODO get the hypervisor_memory correctly */
 	*((unsigned long long *)((char *)cfg + 0x8)) = (unsigned long long)jailhouse_fw;
-
 
 	for (i = 1; i < cpu_count; i++) {
 		bringup_one_core(i);
@@ -269,10 +271,10 @@ void init_binaries() {
 	printk("Jailhouse = 0x%x, linux_loader = 0x%x\n",
 		jailhouse_fw, linux_loader);
 
-	printk("VM0 Config = 0x%x - , Kernel = 0x%x, dtb = 0x%x, fs = 0x%x\n",
+	printk("VM0 Config = 0x%x, Kernel = 0x%x, dtb = 0x%x, fs = 0x%x\n",
 		vmconfig0, vmkernel0, vmdtb0, vmfs0);
 
-	printk("VM1 Config = 0x%x - , Kernel = 0x%x, dtb = 0x%x, fs = 0x%x\n",
+	printk("VM1 Config = 0x%x, Kernel = 0x%x, dtb = 0x%x, fs = 0x%x\n",
 		vmconfig1, vmkernel1, vmdtb1, vmfs1);
 
 }

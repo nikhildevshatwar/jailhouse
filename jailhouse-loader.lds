@@ -28,7 +28,7 @@ INPUT(inmates/tools/arm64/linux-loader.bin)
 
 SECTIONS
 {
-	. = 0x80000000;
+	. = 0x10000;
 	text = .;
 	.text : { *(.text*) }
 
