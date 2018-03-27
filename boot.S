@@ -110,25 +110,25 @@ entry_wrapper:
 
 	.align	11
 simple_el2_vectors:
-	ventry		invalid_exception
-	ventry		invalid_exception
-	ventry		invalid_exception
-	ventry		invalid_exception
+	ventry		.
+	ventry		.
+	ventry		.
+	ventry		.
 
-	ventry		invalid_exception
-	ventry		invalid_exception
-	ventry		invalid_exception
-	ventry		invalid_exception
+	ventry		error_handler
+	ventry		.
+	ventry		.
+	ventry		.
 
 	ventry		hvc_set_vectors
-	ventry		invalid_exception
-	ventry		invalid_exception
-	ventry		invalid_exception
+	ventry		.
+	ventry		.
+	ventry		.
 
-	ventry		invalid_exception
-	ventry		invalid_exception
-	ventry		invalid_exception
-	ventry		invalid_exception
+	ventry		.
+	ventry		.
+	ventry		.
+	ventry		.
 
 
 invalid_exception:
@@ -136,6 +136,18 @@ invalid_exception:
 	mov		x1, #0x21
 	str		w1, [x2]
 	str		w1, [x2]
+	b .
+
+error_handler:
+	mov		x2, #0x09000000
+	mov		x1, #0x24
+	str		w1, [x2]
+	mrs		x1, CurrentEL
+	add x1, x1, #0x30
+	str		w1, [x2]
+	mrs x5, elr_el1
+	mrs x6, esr_el1
+	mrs x7, spsr_el1
 	b .
 
 /*
@@ -255,7 +267,7 @@ hvc_set_vectors:
 	msr	vbar_el1, \tmp		/* Migrate VBAR */
 
 	/* Initialize HCR_EL2 */
-	ldr	\tmp, =(HCR_EL2_RW_AARCH64 | HCR_EL2_HCD_DIS)
+	ldr	\tmp, =(HCR_EL2_RW_AARCH64)
 	msr	hcr_el2, \tmp
 
 	/* Return to the EL1_SP1 mode from EL2 */
