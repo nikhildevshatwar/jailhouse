@@ -6,44 +6,11 @@
 #include <asm/spinlock.h>
 
 
-#define UART_WRITE_ADDR	0x09000000
-#define GICD_BASE		0x08000000
-static DEFINE_SPINLOCK(loader_printk_lock);
-
-static inline void console_write(const char *buf) {
-	volatile char *uart = (volatile char *)UART_WRITE_ADDR;
-
-	while(*buf) {
-		*uart = *buf++;
-	}
-}
-
-#include "hypervisor/printk-core.c"
-
-void printk(const char *fmt, ...)
-{
-	va_list ap;
-
-	va_start(ap, fmt);
-
-	spin_lock(&loader_printk_lock);
-	__vprintk(fmt, ap);
-	spin_unlock(&loader_printk_lock);
-
-	va_end(ap);
-}
-
-/********************** Hypervisor Loader ***************************/
-
+#define UART_WRITE_ADDR		0x09000000
+#define GICD_BASE			0x08000000
 
 #define PSCI_FN64_CPU_ON	0xc4000003
-#define MAX_NUM_CPUS		16
-
-/* This is an assembly wrapper which will setup stack and jump to the bootwrapper_entry */
-extern void entry_wrapper();
-
-void *jailhouse_fw = NULL, *linux_loader = NULL;
-unsigned long linux_loader_size = 0;
+#define GICD_CTLR			0x0
 
 struct vmload_info {
 	unsigned long long *kernel;
@@ -69,34 +36,43 @@ struct loader_info {
 	struct vmload_info vm[8];
 };
 
+void *jailhouse_fw = NULL, *linux_loader = NULL;
+unsigned long linux_loader_size = 0;
+
 void *vmconfig0 = NULL, *vmkernel0 = NULL, *vmdtb0 = NULL, *vmfs0 = NULL;
 void *vmconfig1 = NULL, *vmkernel1 = NULL, *vmdtb1 = NULL, *vmfs1 = NULL;
 unsigned long vmconfig0_size = 0, vmkernel0_size = 0, vmdtb0_size = 0, vmfs0_size = 0;
 unsigned long vmconfig1_size = 0, vmkernel1_size = 0, vmdtb1_size = 0, vmfs1_size = 0;
 
 int (*hyp_entry)(unsigned int);
+extern void entry_wrapper();
+
 char loader_args[64] = "kernel=0xc0280000 dtb=0xc0000000";
+static DEFINE_SPINLOCK(loader_printk_lock);
 
-int enter_hyp(unsigned long cpu_id) {
 
-	asm volatile(
-		"mov	x11, 0x0\n" \
-	);
-	hyp_entry(cpu_id);
-	return 0;
+/********************** printk stub ********************/
+static inline void console_write(const char *buf) {
+	volatile char *uart = (volatile char *)UART_WRITE_ADDR;
+
+	while(*buf) {
+		*uart = *buf++;
+	}
 }
 
-void bootwrapper_entry(unsigned long mpidr, unsigned long cpu_id) {
+#include "hypervisor/printk-core.c"
 
-	unsigned int state = 1;
-	unsigned int param;
+void printk(const char *fmt, ...)
+{
+	va_list ap;
 
-	printk("Core %d is up\n", cpu_id);
-	enter_hyp(cpu_id);
+	va_start(ap, fmt);
 
-	printk("Core %d called entrypoint\n", cpu_id);
-	while(1)
-		;
+	spin_lock(&loader_printk_lock);
+	__vprintk(fmt, ap);
+	spin_unlock(&loader_printk_lock);
+
+	va_end(ap);
 }
 
 extern void arm_smccc_smc(unsigned long a0, unsigned long a1,
@@ -120,6 +96,21 @@ extern void arm_smccc_smc(unsigned long a0, unsigned long a1,
 	"mov		x7,	#0x0\n" \
 	);
 	asm volatile ("smc #0\n");
+}
+
+/*******************************************************/
+
+void bootwrapper_entry(unsigned long mpidr, unsigned long cpu_id) {
+
+	unsigned int state = 1;
+	unsigned int param;
+
+	printk("Core %d is up\n", cpu_id);
+	hyp_entry(cpu_id);
+
+	printk("Core %d called entrypoint\n", cpu_id);
+	while(1)
+		;
 }
 
 int bringup_one_core(int cpu_id) {
@@ -165,20 +156,10 @@ void load_hypervisor(int cpu_count) {
 		bringup_one_core(i);
 	}
 
-	enter_hyp(0);
+	hyp_entry(0);
 	printk("Hypervisor enabled\n");
 
 }
-
-#define JAILHOUSE_HC_DISABLE                    0
-#define JAILHOUSE_HC_CELL_CREATE                1
-#define JAILHOUSE_HC_CELL_START                 2
-#define JAILHOUSE_HC_CELL_SET_LOADABLE          3
-#define JAILHOUSE_HC_CELL_DESTROY               4
-#define JAILHOUSE_HC_HYPERVISOR_GET_INFO        5
-#define JAILHOUSE_HC_CELL_GET_STATE             6
-#define JAILHOUSE_HC_CPU_GET_INFO               7
-#define JAILHOUSE_HC_DEBUG_CONSOLE_PUTC         8
 
 int load_vms() {
 	int ret = -1;
@@ -202,17 +183,23 @@ int load_vms() {
 
 	ret = jailhouse_call_arg1(JAILHOUSE_HC_CELL_START, 0x1);
 	printk("Cell1 started %d\n", ret);
-
-
 }
 
 void gic_v3_init() {
-	volatile unsigned long *gicd_ctrl = (void *)(GICD_BASE + 0x0);
+	volatile unsigned long *gicd_ctrl = (void *)(GICD_BASE + GICD_CTLR);
 	unsigned long val;
 
 	val = *gicd_ctrl;
-	val |= 1 << 1;
+	printk("GICD_CTLR = 0x%x\n", val);
+
+	val = 0x0;
 	*gicd_ctrl = val;
+
+	val |= 1 << 0;
+	val |= 1 << 1;
+	val |= 1 << 4;
+	*gicd_ctrl = val;
+	printk("GICD_CTLR = 0x%x\n", val);
 }
 
 void init_binaries() {
