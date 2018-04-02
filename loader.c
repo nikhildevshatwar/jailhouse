@@ -3,6 +3,7 @@
 #include <asm/spinlock.h>
 
 #define UART_WRITE_ADDR	0x09000000
+#define GICD_BASE		0x08000000
 static DEFINE_SPINLOCK(loader_printk_lock);
 
 static inline void console_write(const char *buf) {
@@ -43,8 +44,8 @@ unsigned long linux_loader_size = 0;
 
 void *vmconfig0 = NULL, *vmkernel0 = NULL, *vmdtb0 = NULL, *vmfs0 = NULL;
 void *vmconfig1 = NULL, *vmkernel1 = NULL, *vmdtb1 = NULL, *vmfs1 = NULL;
-unsigned long vmkernel0_size = 0, vmdtb0_size = 0, vmfs0_size = 0;
-unsigned long vmkernel1_size = 0, vmdtb1_size = 0, vmfs1_size = 0;
+unsigned long vmconfig0_size = 0, vmkernel0_size = 0, vmdtb0_size = 0, vmfs0_size = 0;
+unsigned long vmconfig1_size = 0, vmkernel1_size = 0, vmdtb1_size = 0, vmfs1_size = 0;
 
 int (*hyp_entry)(unsigned int);
 char loader_args[64] = "kernel=0xc0280000 dtb=0xc0000000";
@@ -143,7 +144,7 @@ void load_hypervisor(int cpu_count) {
 	cfg = (char *)jailhouse_fw + hdr->core_size + cpu_count * hdr->percpu_size;
 
 	/* HACK, TODO get the size correctly */
-	memcpy(cfg, vmconfig0, 0x2a4);
+	memcpy(cfg, vmconfig0, 0x244);
 	/* HACK, TODO get the hypervisor_memory correctly */
 	*((unsigned long long *)((char *)cfg + 0x8)) = (unsigned long long)jailhouse_fw;
 
@@ -171,9 +172,6 @@ int load_vms() {
 
 	printk("Ready to load VMs\n");
 
-	/* Sad pointer manipulation to do config->id = 1*/
-	//*((unsigned long *)((char *)vmconfig1 + 40)) = 0x1;
-
 	ret = jailhouse_call(JAILHOUSE_HC_CELL_CREATE, (unsigned long long)vmconfig1, 0x0);
 	printk("Cell1 created %d\n", ret);
 
@@ -196,7 +194,7 @@ int load_vms() {
 }
 
 void gic_v3_init() {
-	volatile unsigned long *gicd_ctrl = (void *)0x1800000;
+	volatile unsigned long *gicd_ctrl = (void *)(GICD_BASE + 0x0);
 	unsigned long val;
 
 	val = *gicd_ctrl;
@@ -214,6 +212,11 @@ void init_binaries() {
 	asm volatile (
 	"ldr	x0, =vmconfig0\n" \
 	"mov	%0, x0" : "=r" ((vmconfig0)) \
+	);
+
+	asm volatile (
+	"ldr	x0, =vmconfig0_size\n" \
+	"mov	%0, x0" : "=r" ((vmconfig0_size)) \
 	);
 
 	asm volatile (
@@ -239,6 +242,11 @@ void init_binaries() {
 	asm volatile (
 	"ldr	x0, =vmconfig1\n" \
 	"mov	%0, x0" : "=r" ((vmconfig1)) \
+	);
+
+	asm volatile (
+	"ldr	x0, =vmconfig1_size\n" \
+	"mov	%0, x0" : "=r" ((vmconfig1_size)) \
 	);
 
 	asm volatile (
