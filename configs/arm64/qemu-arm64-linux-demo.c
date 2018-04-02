@@ -29,6 +29,7 @@ struct {
 		.signature = JAILHOUSE_CELL_DESC_SIGNATURE,
 		.revision = JAILHOUSE_CONFIG_REVISION,
 		.name = "qemu-arm64-linux-demo",
+		.id = 1,
 		.flags = JAILHOUSE_CELL_PASSIVE_COMMREG |
 			JAILHOUSE_CELL_DEBUG_CONSOLE,
 
