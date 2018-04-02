@@ -32,22 +32,22 @@ SECTIONS
 	text = .;
 	.text : { *(.text*) }
 
-	. = 0x80080000;
+	. = 0x40080000;
 	kernel0 = .;
 	.kernel0 : { ../linux/arch/arm64/boot/Image }
 	kernel0_size = . - kernel0;
 
-	. = 0xc0280000;
-	kernel1 = .;
-	.kernel1 : { ../linux/arch/arm64/boot/Image }
-	kernel1_size = . - kernel1;
-
-	. = 0x82000000;
+	. = 0x42000000;
 	dtb0 = .;
 	.dtb0 : { ../generated.dtb }
 	dtb0_size = . - dtb0;
 
-	. = 0xc0000000;
+	. = 0x70280000;
+	kernel1 = .;
+	.kernel1 : { ../linux/arch/arm64/boot/Image }
+	kernel1_size = . - kernel1;
+
+	. = 0x70000000;
 	dtb1 = .;
 	.dtb1 : { configs/arm64/dts/inmate-qemu-arm64.dtb }
 	dtb1_size = . - dtb1;
@@ -57,7 +57,7 @@ SECTIONS
 	.hypervisor : { hypervisor/jailhouse.bin }
 	hyp_size = . - hypervisor;
 
-	. = 0x90000000;
+	. = 0x50000000;
 	vmconfig0 = .;
 	.vmconfig0 : { configs/arm64/qemu-arm64.cell }
 	vmconfig0_size = . - vmconfig0;

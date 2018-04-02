@@ -1,7 +1,9 @@
 #include <stdarg.h>
 #include <jailhouse/string.h>
+#include <asm/spinlock.h>
 
 #define UART_WRITE_ADDR	0x09000000
+static DEFINE_SPINLOCK(loader_printk_lock);
 
 static inline void console_write(const char *buf) {
 	volatile char *uart = (volatile char *)UART_WRITE_ADDR;
@@ -19,7 +21,9 @@ void printk(const char *fmt, ...)
 
 	va_start(ap, fmt);
 
+	spin_lock(&loader_printk_lock);
 	__vprintk(fmt, ap);
+	spin_unlock(&loader_printk_lock);
 
 	va_end(ap);
 }
@@ -30,7 +34,6 @@ void printk(const char *fmt, ...)
 
 #define PSCI_FN64_CPU_ON	0xc4000003
 #define MAX_NUM_CPUS		16
-#define NULL	(void *)0x0
 
 /* This is an assembly wrapper which will setup stack and jump to the bootwrapper_entry */
 extern void entry_wrapper();

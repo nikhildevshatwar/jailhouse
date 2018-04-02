@@ -14,15 +14,18 @@
 #define MPIDR_CLUSTER_MASK      (MPIDR_AFFLVL_MASK << MPIDR_AFFINITY_BITS)
 
 #define CURRENTEL_EL3   (3 << 2)
-#define STACK_CPUX_BASE			0x84000000
 #define HVC_SET_VECTORS			0x0
 #define PSR_SPSR_EL1			0x3c5
+
+#define STACK_CPUX_BASE			0x44000000
+#define UART_WRITE_ADDR			0x09000000
+
 	.text
 
 	.globl	_start
 _start:
 
-	mov		x2, #0x09000000
+	mov		x2, #UART_WRITE_ADDR
 	mov		x1, #0x23
 	str		w1, [x2]
 	str		w1, [x2]
@@ -59,12 +62,8 @@ unsupported:
 
 	.globl	entry_wrapper
 entry_wrapper:
-	mov		x0, #0x0
-	mov		w0, #0xa0000000
-	mov		sp, x0
 
-	bl		setup_el2
-
+#if 0
 	/*
 	 * arm_write_sysreg(ICC_CTLR_EL1, 0);
 	 * arm_write_sysreg(ICC_PMR_EL1, 0xf0);
@@ -78,6 +77,7 @@ entry_wrapper:
 	msr		s3_0_c12_c12_7, x0
 	mov		x0, #0x1
 	msr		s3_0_c12_c12_7, x0
+#endif
 
 	mrs     x0, mpidr_el1
 	mov		x1, x0
@@ -93,6 +93,8 @@ entry_wrapper:
 	mov		x3, #0x1000
 	madd	x2, x1, x3, x2
 	mov		sp, x2
+
+	bl		setup_el2
 
 	/* x0 has mpidr, x1 has cpu_id */
 	bl		bootwrapper_entry
@@ -132,14 +134,14 @@ simple_el2_vectors:
 
 
 invalid_exception:
-	mov		x2, #0x09000000
+	mov		x2, #UART_WRITE_ADDR
 	mov		x1, #0x21
 	str		w1, [x2]
 	str		w1, [x2]
 	b .
 
 error_handler:
-	mov		x2, #0x09000000
+	mov		x2, #UART_WRITE_ADDR
 	mov		x1, #0x24
 	str		w1, [x2]
 	mrs		x1, CurrentEL
