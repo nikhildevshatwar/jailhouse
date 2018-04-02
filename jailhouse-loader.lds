@@ -52,11 +52,12 @@ SECTIONS
 	.dtb1 : { configs/arm64/dts/inmate-qemu-arm64.dtb }
 	dtb1_size = . - dtb1;
 
-	. = 0x90000000;
+	. = 0x7fc00000;
 	hypervisor = .;
 	.hypervisor : { hypervisor/jailhouse.bin }
 	hyp_size = . - hypervisor;
 
+	. = 0x90000000;
 	vmconfig0 = .;
 	.vmconfig0 : { configs/arm64/qemu-arm64.cell }
 	vmconfig0_size = . - vmconfig0;
