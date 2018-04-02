@@ -1,6 +1,10 @@
 #include <stdarg.h>
+#include <jailhouse/types.h>
+#include <jailhouse/header.h>
 #include <jailhouse/string.h>
+#include <jailhouse/hypercall.h>
 #include <asm/spinlock.h>
+
 
 #define UART_WRITE_ADDR	0x09000000
 #define GICD_BASE		0x08000000
@@ -31,7 +35,6 @@ void printk(const char *fmt, ...)
 
 /********************** Hypervisor Loader ***************************/
 
-#include "jailhouse/header.h"
 
 #define PSCI_FN64_CPU_ON	0xc4000003
 #define MAX_NUM_CPUS		16
@@ -41,6 +44,30 @@ extern void entry_wrapper();
 
 void *jailhouse_fw = NULL, *linux_loader = NULL;
 unsigned long linux_loader_size = 0;
+
+struct vmload_info {
+	unsigned long long *kernel;
+	unsigned long kernel_size;
+
+	unsigned long long *dtb;
+	unsigned long dtb_size;
+
+	unsigned long long *initramfs;
+	unsigned long fs_size;
+
+	char args[256];
+};
+
+struct loader_info {
+	int cpus[8];
+	unsigned long long *jailhouse_fw;
+	unsigned long jailhouse_size;
+
+	unsigned long long *linux_loader;
+	unsigned long linux_loader_size;
+
+	struct vmload_info vm[8];
+};
 
 void *vmconfig0 = NULL, *vmkernel0 = NULL, *vmdtb0 = NULL, *vmfs0 = NULL;
 void *vmconfig1 = NULL, *vmkernel1 = NULL, *vmdtb1 = NULL, *vmfs1 = NULL;
@@ -93,20 +120,6 @@ extern void arm_smccc_smc(unsigned long a0, unsigned long a1,
 	"mov		x7,	#0x0\n" \
 	);
 	asm volatile ("smc #0\n");
-}
-
-static inline unsigned long long jailhouse_call(unsigned long long num, unsigned long long arg1, unsigned long long arg2)
-{
-	register unsigned long long num_result asm("x0") = num;
-	register unsigned long long __arg1 asm("x1") = arg1;
-	register unsigned long long __arg2 asm("x2") = arg2;
-
-	asm volatile(
-		"hvc #0x4a48"
-		: "=r" (num_result)
-		: "r" (num_result), "r" (__arg1), "r" (__arg2)
-		: "memory");
-	return num_result;
 }
 
 int bringup_one_core(int cpu_id) {
@@ -172,10 +185,10 @@ int load_vms() {
 
 	printk("Ready to load VMs\n");
 
-	ret = jailhouse_call(JAILHOUSE_HC_CELL_CREATE, (unsigned long long)vmconfig1, 0x0);
+	ret = jailhouse_call_arg1(JAILHOUSE_HC_CELL_CREATE, (unsigned long long)vmconfig1);
 	printk("Cell1 created %d\n", ret);
 
-	ret = jailhouse_call(JAILHOUSE_HC_CELL_SET_LOADABLE, 0x1, 0x0);
+	ret = jailhouse_call_arg1(JAILHOUSE_HC_CELL_SET_LOADABLE, 0x1);
 	printk("Cell1 can be loaded %d\n", ret);
 
 	/* TODO change this harcoding */
@@ -187,7 +200,7 @@ int load_vms() {
 
 	printk("Cell1 binaries loaded\n");
 
-	ret = jailhouse_call(JAILHOUSE_HC_CELL_START, 0x1, 0x0);
+	ret = jailhouse_call_arg1(JAILHOUSE_HC_CELL_START, 0x1);
 	printk("Cell1 started %d\n", ret);
 
 

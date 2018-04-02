@@ -63,22 +63,6 @@ unsupported:
 	.globl	entry_wrapper
 entry_wrapper:
 
-#if 0
-	/*
-	 * arm_write_sysreg(ICC_CTLR_EL1, 0);
-	 * arm_write_sysreg(ICC_PMR_EL1, 0xf0);
-	 * arm_write_sysreg(ICC_IGRPEN1_EL1, ICC_IGRPEN1_EN);
-	 */
-	mov		x0, #0x0
-	msr		s3_0_c12_c12_4, x0
-	mov		x0, #0xf0
-	msr		s3_0_c4_c6_0, x0
-	mov		x0, #0x1
-	msr		s3_0_c12_c12_7, x0
-	mov		x0, #0x1
-	msr		s3_0_c12_c12_7, x0
-#endif
-
 	mrs     x0, mpidr_el1
 	mov		x1, x0
 	and		x1, x1, #0xff
@@ -221,16 +205,6 @@ hvc_set_vectors:
  * They will be passed to the guest.
  */
 .macro armv8_switch_to_el1_m, ep, tmp
-
-#if 0
-	/* Initialize Generic Timers */
-	mrs	\tmp, cnthctl_el2
-	/* Enable EL1 access to timers */
-	orr	\tmp, \tmp, #(CNTHCTL_EL2_EL1PCEN_EN |\
-		CNTHCTL_EL2_EL1PCTEN_EN)
-	msr	cnthctl_el2, \tmp
-	msr	cntvoff_el2, xzr
-#endif
 
 	/* Initilize MPID/MPIDR registers */
 	mrs	\tmp, midr_el1

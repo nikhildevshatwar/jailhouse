@@ -35,7 +35,7 @@ kbuild = -C $(KDIR) M=$$PWD $@
 modules clean:
 	$(Q)$(MAKE) $(kbuild)
 
-CC := $(CROSS_COMPILE)gcc -I hypervisor/include -I hypervisor/arch/$(ARCH)/include
+CC := $(CROSS_COMPILE)gcc -I include -I include/arch/$(ARCH) -I hypervisor/include -I hypervisor/arch/$(ARCH)/include
 jailhouse-loader.o: boot.S loader.c Makefile
 	 $(CC) -c loader.c boot.S  hypervisor/lib.c
 
