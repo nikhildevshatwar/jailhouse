@@ -59,6 +59,13 @@ struct {
 	},
 
 	.mem_regions = {
+		/* gic.its */ {
+			.phys_start = 0x01820000,
+			.virt_start = 0x01820000,
+			.size = 0x00010000,
+			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE |
+				JAILHOUSE_MEM_IO,
+		},
 		/* uart2 */ {
 			.phys_start = 0x02800000,
 			.virt_start = 0x02800000,
