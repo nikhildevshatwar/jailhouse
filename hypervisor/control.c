@@ -920,6 +920,7 @@ void panic_park(void)
 	if (cell_failed)
 		cell->comm_page.comm_region.cell_state = JAILHOUSE_CELL_FAILED;
 
+	arch_dump_stack(__func__);
 	arch_panic_park();
 
 	if (phys_processor_id() == panic_cpu)

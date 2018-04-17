@@ -117,3 +117,26 @@ void arch_cell_destroy(struct cell *cell)
 
 	arm_paging_cell_destroy(cell);
 }
+
+void arch_dump_stack(const char *reason)
+{
+	u64 lr, fp, temp;
+	int depth = 16;
+
+	printk("----------------[cut here]----------------\n");
+	printk("Stack dump: %s\n", reason);
+
+	asm volatile ("mov    %0, x30" : "=r" ((lr)));
+	asm volatile ("mov    %0, x29" : "=r" ((fp)));
+
+	while(depth--) {
+		temp = fp;
+		printk("FP = %016llx, LR = %016llx\n", fp, lr);
+		lr = *((unsigned long long *)fp + 1);
+		fp = *((unsigned long long *)fp);
+		temp = fp - temp;
+		if (temp > 0x1000)
+			break;
+	}
+	printk("----------------[cut here]----------------\n");
+}

@@ -204,3 +204,7 @@ void arch_cell_destroy(struct cell *cell)
 
 	arm_paging_cell_destroy(cell);
 }
+
+void arch_dump_stack(const char *reason)
+{
+}

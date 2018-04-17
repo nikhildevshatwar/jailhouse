@@ -319,3 +319,7 @@ void arch_panic_park(void)
 
 	vcpu_park();
 }
+
+void arch_dump_stack(const char *reason)
+{
+}

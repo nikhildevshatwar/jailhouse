@@ -294,4 +294,10 @@ void __attribute__((noreturn)) arch_panic_stop(void);
  */
 void arch_panic_park(void);
 
+/**
+ * Prints the stack dump of the current CPU
+ *
+ * @param reason	A msg to indicate why was stack dumped
+ */
+void arch_dump_stack(const char *reason);
 /** @} */

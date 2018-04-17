@@ -198,6 +198,7 @@ static void arch_dump_exit(struct registers *regs, const char *reason)
 	fill_trap_context(&ctx, regs);
 	panic_printk("\nFATAL: Unhandled HYP exception: %s\n", reason);
 	dump_regs(&ctx);
+	arch_dump_stack(__func__);
 	dump_hyp_stack(&ctx);
 }
 
