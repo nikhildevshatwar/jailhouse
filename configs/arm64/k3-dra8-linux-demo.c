@@ -40,7 +40,7 @@ struct {
 		.num_irqchips = ARRAY_SIZE(config.irqchips),
 		.pio_bitmap_size = 0,
 		.num_pci_devices = 0,
-		.cpu_reset_address = 0x0,
+		.cpu_reset_address = CONFIG_INMATE_BASE,
 	},
 
 	.cpus = {
