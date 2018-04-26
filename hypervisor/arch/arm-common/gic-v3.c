@@ -118,6 +118,10 @@ static int gicv3_init(void)
 	if (!(mmio_read32(gicd_base + GICD_CTLR) & GICD_CTLR_ARE_NS))
 		return trace_error(-EIO);
 
+	/* Enable Group1 NS interrupts */
+	mmio_write32(gicd_base + GICD_CTLR,
+		mmio_read32(gicd_base + GICD_CTLR) | GICD_CTLR_EN_GRP1NS);
+
 	/* Let the per-cpu code access the redistributors */
 	gicr_base = paging_map_device(
 			system_config->platform_info.arm.gicr_base, GICR_SIZE);

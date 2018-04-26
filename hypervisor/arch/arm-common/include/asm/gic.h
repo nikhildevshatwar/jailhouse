@@ -17,6 +17,7 @@
 
 #define GICD_CTLR			0x0000
 # define GICD_CTLR_ARE_NS		(1 << 4)
+# define GICD_CTLR_EN_GRP1NS		(1 << 1)
 #define GICD_TYPER			0x0004
 #define GICD_IIDR			0x0008
 #define GICD_IGROUPR			0x0080
