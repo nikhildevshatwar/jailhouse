@@ -36,6 +36,8 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#define CURRENTEL_EL2		(2 << 2)
+
 .macro	ventry	label
 	.align	7
 	b	\label
@@ -45,8 +47,14 @@
 	.globl __reset_entry
 __reset_entry:
 	ldr	x0, =vectors
+	mrs	x0, CurrentEL
+	cmp	x0, #CURRENTEL_EL2
+	b.eq	reset_el2
 	msr	vbar_el1, x0
-
+	b	done
+reset_el2:
+	msr	vbar_el2, x0
+done:
 	ldr	x0, =stack_top
 	mov	sp, x0
 
