@@ -36,14 +36,13 @@ static int handle_smc(struct trap_context *ctx)
 {
 	unsigned long *regs = ctx->regs;
 
-	if (!IS_PSCI_32(regs[0]) && !IS_PSCI_64(regs[0]))
-		return TRAP_UNHANDLED;
+	if (IS_PSCI_32(regs[0]) || IS_PSCI_64(regs[0])) {
+		regs[0] = psci_dispatch(ctx);
+		arch_skip_instruction(ctx);
+		return TRAP_HANDLED;
+	}
 
-	regs[0] = psci_dispatch(ctx);
-
-	arch_skip_instruction(ctx);
-
-	return TRAP_HANDLED;
+	return TRAP_UNHANDLED;
 }
 
 static int handle_hvc(struct trap_context *ctx)
