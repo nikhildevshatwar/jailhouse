@@ -42,7 +42,9 @@ static int handle_smc(struct trap_context *ctx)
 		return TRAP_HANDLED;
 	}
 
-	return TRAP_UNHANDLED;
+	printk("WARN: Unknown SMC call 0x%lx, Skipping!!\n", regs[0]);
+	arch_skip_instruction(ctx);
+	return TRAP_HANDLED;
 }
 
 static int handle_hvc(struct trap_context *ctx)
