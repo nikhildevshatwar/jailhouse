@@ -14,6 +14,7 @@
 #include <jailhouse/paging.h>
 #include <jailhouse/processor.h>
 #include <jailhouse/string.h>
+#include <jailhouse/control.h>
 #include <asm/control.h>
 #include <asm/mmu_hyp.h>
 #include <asm/setup.h>
@@ -159,4 +160,8 @@ void arch_cpu_restore(unsigned int cpu_id, int return_code)
 	       NUM_ENTRY_REGS * sizeof(unsigned long));
 
 	arch_shutdown_self(cpu_data);
+}
+
+void arch_dump_stacktrace(void)
+{
 }

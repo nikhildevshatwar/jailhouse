@@ -15,6 +15,7 @@
 #include <jailhouse/paging.h>
 #include <jailhouse/printk.h>
 #include <jailhouse/processor.h>
+#include <jailhouse/control.h>
 #include <asm/control.h>
 #include <asm/entry.h>
 #include <asm/irqchip.h>
@@ -135,4 +136,27 @@ void arch_cpu_restore(unsigned int cpu_id, int return_code)
 	cpu_data->guest_regs.usr[0] = return_code;
 
 	arch_shutdown_self(cpu_data);
+}
+
+void arch_dump_stacktrace(void)
+{
+	u64 lr, fp, temp;
+	int depth = 8;
+
+	printk("-----------------[cut here]-----------------\n");
+	printk("Stack trace:\n");
+
+	asm volatile ("mov    %0, x30" : "=r" ((lr)));
+	asm volatile ("mov    %0, x29" : "=r" ((fp)));
+
+	while(depth--) {
+		temp = fp;
+		printk("FP = %016llx, LR = %016llx\n", fp, lr);
+		lr = *((unsigned long long *)fp + 1);
+		fp = *((unsigned long long *)fp);
+		temp = fp - temp;
+		if (temp > 0x1000)
+			break;
+	}
+	printk("-----------------[cut here]-----------------\n");
 }

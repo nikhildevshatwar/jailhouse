@@ -190,6 +190,7 @@ void arch_el2_abt(union registers *regs)
 	panic_printk("\nFATAL: Unhandled HYP exception: "
 		     "synchronous abort from EL2\n");
 	dump_regs(&ctx);
+	arch_dump_stacktrace();
 	dump_hyp_stack(&ctx);
 	panic_stop();
 }

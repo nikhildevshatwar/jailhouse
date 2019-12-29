@@ -16,6 +16,7 @@
 #include <jailhouse/paging.h>
 #include <jailhouse/printk.h>
 #include <jailhouse/processor.h>
+#include <jailhouse/control.h>
 #include <asm/apic.h>
 #include <asm/bitops.h>
 #include <asm/vcpu.h>
@@ -273,4 +274,8 @@ void arch_cpu_restore(unsigned int cpu_id, int return_code)
 
 	write_msr(MSR_FS_BASE, cpu_data->linux_fs.base);
 	write_msr(MSR_GS_BASE, cpu_data->linux_gs.base);
+}
+
+void arch_dump_stacktrace(void)
+{
 }

@@ -273,4 +273,8 @@ void __attribute__((noreturn)) arch_panic_stop(void);
  */
 void arch_panic_park(void);
 
+/**
+ * Prints the stack dump of the current CPU
+ */
+void arch_dump_stacktrace(void);
 /** @} */
