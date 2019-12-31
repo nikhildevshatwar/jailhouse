@@ -102,6 +102,7 @@ static enum mmio_result regmap_handler(void *arg, struct mmio_access *mmio)
 	info = regmap->info;
 	idx = mmio->address / info->reg_size;
 
+printk("%s: triggered\n", __func__);
 	if (mmio->is_write) {
 		if ((info->flags & JAILHOUSE_MEM_WRITE) == 0)
 			return MMIO_ERROR;
@@ -111,6 +112,7 @@ static enum mmio_result regmap_handler(void *arg, struct mmio_access *mmio)
 	}
 
 	if (regmap_is_enabled(regmap, idx)) {
+printk("MMIO access allowed\n");
 		mmio_perform_access(regmap->map_base, mmio);
 		return MMIO_HANDLED;
 	}  else {
@@ -173,6 +175,17 @@ static int regmap_modify_root(struct cell *cell, struct reg_map_data *regmap,
 		if (idx >= root_regmap->info->reg_count)
 			root_regmap = NULL;
 	}
+int i;
+printk("%s: Root cell:  ", __func__);
+for (i = 0; i < JAILHOUSE_REGMAP_WORDS; i++) {
+	printk("%08x", root_cell.regmap->reg_bitmap[i]);
+}
+printk("\n");
+printk("%s: Inmate cell:\n", __func__);
+for (i = 0; i < JAILHOUSE_REGMAP_WORDS; i++) {
+	printk("%08x", cell->regmap->reg_bitmap[i]);
+}
+printk("\n");
 	return 0;
 }
 
@@ -210,6 +223,7 @@ static int regmap_cell_init(struct cell *cell)
 		memcpy(regmap->reg_bitmap, info->reg_bitmap,
 			sizeof(regmap->reg_bitmap));
 
+printk("%s: Registered handler for %llx (%x)\n", __func__, info->reg_base, size);
 		mmio_region_register(cell, info->reg_base, size,
 			regmap_handler, regmap);
 
