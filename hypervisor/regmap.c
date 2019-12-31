@@ -180,7 +180,7 @@ static int regmap_cell_init(struct cell *cell)
 {
 	const struct jailhouse_regmap *info;
 	struct reg_map_data *regmap;
-	u32 i, num_pages, size, valid_bytes;
+	u32 i, num_pages, size;
 	int ret;
 
 	if (cell->config->num_regmaps == 0)
@@ -193,6 +193,7 @@ static int regmap_cell_init(struct cell *cell)
 
 	info = jailhouse_cell_regmaps(cell->config);
 	for (i = 0; i < cell->config->num_regmaps; i++, info++) {
+
 		regmap = &cell->regmap[i];
 		regmap->info = info;
 		regmap->cell = cell;
@@ -206,9 +207,8 @@ static int regmap_cell_init(struct cell *cell)
 		if (!regmap->map_base)
 			return -ENOMEM;
 
-		/* Find minimum u32 words needed to copy */
-		valid_bytes = ((info->reg_count + 31) / 32) * 4;
-		memcpy(regmap->reg_bitmap, info->reg_bitmap, valid_bytes);
+		memcpy(regmap->reg_bitmap, info->reg_bitmap,
+			sizeof(regmap->reg_bitmap));
 
 		mmio_region_register(cell, info->reg_base, size,
 			regmap_handler, regmap);

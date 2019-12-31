@@ -40,7 +40,7 @@ struct reg_map_data {
 	/** virt address where this regmap is mapped */
 	void *map_base;
 	/** Ownership details for each register */
-	u32 reg_bitmap[8];
+	u32 reg_bitmap[JAILHOUSE_REGMAP_WORDS];
 };
 
 /** @} REGMAP */
