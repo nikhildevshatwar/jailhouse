@@ -27,6 +27,8 @@ struct {
 	struct jailhouse_memory mem_regions[24];
 	struct jailhouse_irqchip irqchips[4];
 	struct jailhouse_pci_device pci_devices[1];
+	struct jailhouse_regmap regmaps[1];
+
 } __attribute__((packed)) config = {
 	.cell = {
 		.signature = JAILHOUSE_CELL_DESC_SIGNATURE,
@@ -38,6 +40,7 @@ struct {
 		.num_memory_regions = ARRAY_SIZE(config.mem_regions),
 		.num_irqchips = ARRAY_SIZE(config.irqchips),
 		.num_pci_devices = ARRAY_SIZE(config.pci_devices),
+		.num_regmaps = ARRAY_SIZE(config.regmaps),
 		.cpu_reset_address = 0x0,
 		.vpci_irq_base = 195 - 32,
 		.console = {
@@ -285,6 +288,19 @@ struct {
 			},
 			.shmem_region = 0,
 			.shmem_protocol = JAILHOUSE_SHMEM_PROTO_VETH,
+		},
+	},
+
+	.regmaps = {
+		/* Partition7 */ {
+			.reg_base = 0x11c000,
+			.reg_size = 4,
+			.reg_count = 256,
+			.flags = JAILHOUSE_MEM_READ | JAILHOUSE_MEM_WRITE,
+			.reg_bitmap = {
+				0x00000000, 0x00000000, 0x00000000, 0xc0000000,
+				0x00000000, 0x00000000, 0x00000000, 0x00000000,
+			},
 		},
 	},
 };
