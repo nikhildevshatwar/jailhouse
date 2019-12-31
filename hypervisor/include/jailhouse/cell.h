@@ -69,6 +69,8 @@ struct cell {
 	unsigned int num_mmio_regions;
 	/** Maximum number of MMIO regions. */
 	unsigned int max_mmio_regions;
+	/** List of register maps assigned to this cell. */
+	struct reg_map_data *regmap;
 };
 
 extern struct cell root_cell;
