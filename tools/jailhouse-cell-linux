@@ -506,18 +506,20 @@ class MemoryRegion:
     JAILHOUSE_MEM_IO = 0x0010
     JAILHOUSE_MEM_COMM_REGION = 0x0020
     JAILHOUSE_MEM_ROOTSHARED = 0x0080
+    JAILHOUSE_MEM_ACCESS_BYTEMAP = 0x0200
 
     E820_RAM = 1
     E820_RESERVED = 2
 
-    _REGION_FORMAT = 'QQQQ'
+    _REGION_FORMAT = 'QQQQI'
     SIZE = struct.calcsize(_REGION_FORMAT)
 
     def __init__(self, region_struct):
         (self.phys_start,
          self.virt_start,
          self.size,
-         self.flags) = \
+         self.flags,
+         self.access_map_idx) = \
             struct.unpack_from(MemoryRegion._REGION_FORMAT, region_struct)
 
     def is_ram(self):
@@ -574,7 +576,7 @@ class PIORegion:
 
 class Config:
     _HEADER_FORMAT = '=6sH32s4xIIIIIIIIIIQ8x32x'
-    _HEADER_REVISION = 12
+    _HEADER_REVISION = 13
 
     def __init__(self, config_file):
         self.data = config_file.read()

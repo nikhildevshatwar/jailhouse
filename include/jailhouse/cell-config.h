@@ -1,3 +1,4 @@
+
 /*
  * Jailhouse, a Linux-based partitioning hypervisor
  *
@@ -50,7 +51,7 @@
  * Incremented on any layout or semantic change of system or cell config.
  * Also update HEADER_REVISION in tools.
  */
-#define JAILHOUSE_CONFIG_REVISION	12
+#define JAILHOUSE_CONFIG_REVISION	13
 
 #define JAILHOUSE_CELL_NAME_MAXLEN	31
 
@@ -114,6 +115,7 @@ struct jailhouse_cell_desc {
 #define JAILHOUSE_MEM_LOADABLE		0x0040
 #define JAILHOUSE_MEM_ROOTSHARED	0x0080
 #define JAILHOUSE_MEM_NO_HUGEPAGES	0x0100
+#define JAILHOUSE_MEM_ACCESS_BYTEMAP    0x0200
 #define JAILHOUSE_MEM_IO_UNALIGNED	0x8000
 #define JAILHOUSE_MEM_IO_WIDTH_SHIFT	16 /* uses bits 16..19 */
 #define JAILHOUSE_MEM_IO_8		(1 << JAILHOUSE_MEM_IO_WIDTH_SHIFT)
@@ -126,6 +128,7 @@ struct jailhouse_memory {
 	__u64 virt_start;
 	__u64 size;
 	__u64 flags;
+	__u32 access_map_idx;
 } __attribute__((packed));
 
 #define JAILHOUSE_SHMEM_NET_REGIONS(start, dev_id)			\
@@ -152,7 +155,8 @@ struct jailhouse_memory {
 	}
 
 #define JAILHOUSE_MEMORY_IS_SUBPAGE(mem)	\
-	((mem)->virt_start & PAGE_OFFS_MASK || (mem)->size & PAGE_OFFS_MASK)
+	((mem)->virt_start & PAGE_OFFS_MASK || (mem)->size & PAGE_OFFS_MASK || \
+	 (mem)->flags & JAILHOUSE_MEM_ACCESS_BYTEMAP)
 
 #define JAILHOUSE_CACHE_L3_CODE		0x01
 #define JAILHOUSE_CACHE_L3_DATA		0x02
@@ -333,27 +337,6 @@ struct jailhouse_system {
 	struct jailhouse_cell_desc root_cell;
 } __attribute__((packed));
 
-static inline __u32
-jailhouse_cell_config_size(struct jailhouse_cell_desc *cell)
-{
-	return sizeof(struct jailhouse_cell_desc) +
-		cell->cpu_set_size +
-		cell->num_memory_regions * sizeof(struct jailhouse_memory) +
-		cell->num_cache_regions * sizeof(struct jailhouse_cache) +
-		cell->num_irqchips * sizeof(struct jailhouse_irqchip) +
-		cell->num_pio_regions * sizeof(struct jailhouse_pio) +
-		cell->num_pci_devices * sizeof(struct jailhouse_pci_device) +
-		cell->num_pci_caps * sizeof(struct jailhouse_pci_capability) +
-		cell->num_stream_ids * sizeof(__u32);
-}
-
-static inline __u32
-jailhouse_system_config_size(struct jailhouse_system *system)
-{
-	return sizeof(*system) - sizeof(system->root_cell) +
-		jailhouse_cell_config_size(&system->root_cell);
-}
-
 static inline const unsigned long *
 jailhouse_cell_cpu_set(const struct jailhouse_cell_desc *cell)
 {
@@ -413,6 +396,48 @@ jailhouse_cell_stream_ids(const struct jailhouse_cell_desc *cell)
 {
 	return (const __u32 *)((void *)jailhouse_cell_pci_caps(cell) +
 		cell->num_pci_caps * sizeof(struct jailhouse_pci_capability));
+}
+
+static inline const __u8 *
+jailhouse_cell_access_maps(const struct jailhouse_cell_desc *cell)
+{
+	return (const __u8 *)((void *)jailhouse_cell_stream_ids(cell) +
+		 cell->num_stream_ids * sizeof(__u32));
+}
+
+static inline __u32
+jailhouse_access_map_size(struct jailhouse_cell_desc *cell)
+{
+	__u32 i, size = 0;
+	const struct jailhouse_memory *mem;
+
+	mem = jailhouse_cell_mem_regions(cell);
+	for (i = 0; i < cell->num_memory_regions; i++, mem++)
+		if (mem->flags & JAILHOUSE_MEM_ACCESS_BYTEMAP)
+			size += (mem->size + 7) / 8;
+	return size;
+}
+
+static inline __u32
+jailhouse_cell_config_size(struct jailhouse_cell_desc *cell)
+{
+	return sizeof(struct jailhouse_cell_desc) +
+		cell->cpu_set_size +
+		cell->num_memory_regions * sizeof(struct jailhouse_memory) +
+		cell->num_cache_regions * sizeof(struct jailhouse_cache) +
+		cell->num_irqchips * sizeof(struct jailhouse_irqchip) +
+		cell->num_pio_regions * sizeof(struct jailhouse_pio) +
+		cell->num_pci_devices * sizeof(struct jailhouse_pci_device) +
+		cell->num_pci_caps * sizeof(struct jailhouse_pci_capability) +
+		cell->num_stream_ids * sizeof(__u32) +
+		jailhouse_access_map_size(cell);
+}
+
+static inline __u32
+jailhouse_system_config_size(struct jailhouse_system *system)
+{
+	return sizeof(*system) - sizeof(system->root_cell) +
+		jailhouse_cell_config_size(&system->root_cell);
 }
 
 #endif /* !_JAILHOUSE_CELL_CONFIG_H */
