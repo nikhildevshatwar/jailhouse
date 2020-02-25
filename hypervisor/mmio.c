@@ -304,6 +304,30 @@ void mmio_perform_access(void *base, struct mmio_access *mmio)
 		}
 }
 
+/*
+ * Check in the access_map for the given mem region
+ * Make sure that all bytes are enabled in the bimap
+ */
+static bool access_map_allowed(const struct jailhouse_memory *mem,
+			      struct mmio_access *mmio)
+{
+	struct cell *cell;
+	unsigned int mask;
+	const unsigned char *access_map;
+	unsigned long long *bitmap;
+
+	cell = this_cell();
+	access_map  = jailhouse_cell_access_maps(cell->config);
+	access_map += mem->access_map_idx;
+	access_map += mmio->address / 8;
+
+	bitmap = (unsigned long long *)access_map;
+	mask = (1 << (mmio->size + mmio->address % 8)) - 1;
+	if ((*bitmap & mask) == mask)
+		return true;
+	return false;
+}
+
 static enum mmio_result mmio_handle_subpage(void *arg, struct mmio_access *mmio)
 {
 	const struct jailhouse_memory *mem = arg;
@@ -324,6 +348,10 @@ static enum mmio_result mmio_handle_subpage(void *arg, struct mmio_access *mmio)
 	/* naturally unaligned access needs to be allowed explicitly */
 	if (mmio->address & (mmio->size - 1) &&
 	    !(mem->flags & JAILHOUSE_MEM_IO_UNALIGNED))
+		goto invalid_access;
+
+	if (mem->flags & JAILHOUSE_MEM_ACCESS_BYTEMAP &&
+	    access_map_allowed(mem, mmio))
 		goto invalid_access;
 
 	err = paging_create(&this_cpu_data()->pg_structs, page_phys, PAGE_SIZE,
